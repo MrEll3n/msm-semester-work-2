@@ -1,0 +1,245 @@
+\documentclass[28pt, a0paper, margin=3mm,
+               innermargin=8mm, blockverticalspace=20mm,
+               colspace=15mm, subcolspace=8mm]{tikzposter}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[czech]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+
+\graphicspath{{../output/}}
+
+% ------------------------------------------------------------------
+% Barevné schéma a styl bloků (ploché obdélníky, tmavě modrá hlavička)
+% ------------------------------------------------------------------
+\definecolorstyle{MSMStyle}{
+    \definecolor{colorOne}{RGB}{17,54,97}   % tmavě modrá - title/block hlavičky
+    \definecolor{colorTwo}{RGB}{17,54,97}
+    \definecolor{colorThree}{RGB}{245,247,250}
+}{
+    \colorlet{backgroundcolor}{white}
+    \colorlet{framecolor}{colorOne}
+    \colorlet{titlefgcolor}{white}
+    \colorlet{titlebgcolor}{colorOne}
+    \colorlet{blocktitlebgcolor}{colorOne}
+    \colorlet{blocktitlefgcolor}{white}
+    \colorlet{blockbodybgcolor}{white}
+    \colorlet{blockbodyfgcolor}{black}
+    \colorlet{notefgcolor}{black}
+    \colorlet{notefrcolor}{colorOne}
+    \colorlet{notebgcolor}{colorThree}
+}
+
+\usecolorstyle{MSMStyle}
+\usetheme{Default}
+\useblockstyle[roundedcorners=0pt, titlewidthscale=1, bodywidthscale=1]{Basic}
+\usetitlestyle[roundedcorners=0pt]{Filled}
+
+\tikzposterlatexaffectionproofoff
+
+\newcommand{\var}[1]{\texttt{\detokenize{#1}}}
+
+\title{\parbox{0.95\linewidth}{\centering Testy o poloze: liší se chronotypy délkou spánku a únavou?\\
+\large Jednorozměrné a vícerozměrné srovnání skupin Morning Lark, Intermediate a Night Owl}}
+\author{Vít Novotný \& TODO}
+\institute{ZČU FAV -- KMA/MSM 2026/2027}
+
+\begin{document}
+\maketitle
+
+\begin{columns}
+
+% ===================== SLOUPEC 1 =====================
+\column{0.33}
+
+\block{Cíl a data}{
+\textbf{Otázka:} liší se tři chronotypy (\emph{Morning Lark}, \emph{Intermediate},
+\emph{Night Owl}) polohou čtyř spojitých proměnných? Hladina významnosti
+$\alpha = 0{,}05$ ve všech testech.
+
+\textbf{Data:} Kaggle, \emph{Sleep Debt \& Screen Time} (syntetická data),
+$n = 8\,500$ pozorování ve skupinách po $3\,880$ / $2\,165$ / $2\,455$.
+
+\begin{itemize}
+\item \var{bedtime_phone_minutes} -- minuty s telefonem před spaním
+\item \var{sleep_latency_min} -- doba usínání (min)
+\item \var{total_sleep_hours} -- délka spánku (h)
+\item \var{next_day_fatigue_score} -- únava další den (0--10, strop 10)
+\end{itemize}
+
+\centering\small
+\begin{tabular}{lrrrr}
+\toprule
+průměr (sm. odch.) & telefon & latence & spánek & únava \\
+\midrule
+Intermediate & 59,6 (37,2) & 40,8 (17,7) & 6,44 (1,17) & 3,48 (2,54) \\
+Morning Lark & 59,8 (37,7) & 40,9 (17,8) & 7,38 (1,19) & 2,53 (2,18) \\
+Night Owl    & 58,3 (35,9) & 40,2 (16,7) & 5,01 (1,05) & 5,40 (2,54) \\
+\bottomrule
+\end{tabular}
+\normalsize
+
+\vspace{0.5em}
+\includegraphics[width=0.45\linewidth]{1_scatter_matrix.png}
+}
+
+\block{Rozdělení dat}{
+Telefon a latence jsou zešikmené, únava má strop 10; normalita neplatí.
+
+\includegraphics[width=0.92\linewidth]{2_histograms.png}
+}
+
+\block{Jednovýběrové testy}{
+Pro každou proměnnou a skupinu:
+$H_0\!: \mu = \mu_0$ vs. $H_1\!: \mu \ne \mu_0$ (t-test) a
+$H_0\!: m = m_0$ vs. $H_1\!: m \ne m_0$ (Wilcoxonův test).
+Referencí jsou \textbf{průměr $\mu_0$ a medián $m_0$ všech dat}, test tedy
+odpovídá na otázku, zda se skupina liší od celé populace.
+
+\centering\small
+\begin{tabular}{llrr}
+\toprule
+proměnná & skupina & $p_t$ & $p_W$ \\
+\midrule
+telefon & Intermediate & 0,60 & $<0{,}001$ \\
+telefon & Morning Lark & 0,53 & $<0{,}001$ \\
+telefon & Night Owl    & 0,19 & $<0{,}001$ \\
+latence & Intermediate & 0,57 & $<0{,}001$ \\
+latence & Morning Lark & 0,56 & $<0{,}001$ \\
+latence & Night Owl    & 0,18 & $<0{,}001$ \\
+spánek  & všechny      & $<0{,}001$ & $<0{,}001$ \\
+únava   & Intermediate & $<0{,}001$ & \textbf{0,93} \\
+únava   & Morning Lark & $<0{,}001$ & $<0{,}001$ \\
+únava   & Night Owl    & $<0{,}001$ & $<0{,}001$ \\
+\bottomrule
+\end{tabular}
+\normalsize
+
+\vspace{0.5em}
+\raggedright
+Testy se rozcházejí u telefonních minut a latence: t-test průměr nezamítá,
+Wilcoxon zamítá, protože průměr (tažený dlouhým pravým chvostem) padá na
+$\mu_0$, ale medián ne. Opačně u únavy v~Intermediate: průměr se od $\mu_0$ liší,
+medián ne. Shapiro--Wilk zamítá normalitu všude ($p<10^{-17}$).
+
+\centering
+\includegraphics[width=\linewidth]{2_means_vs_reference.png}
+
+\includegraphics[width=0.38\linewidth]{2_qq_plots.png}
+}
+
+
+% ===================== SLOUPEC 2 =====================
+\column{0.33}
+
+\block{Dvouvýběrové testy}{
+Pro každou dvojici skupin: $H_0\!: \mu_A = \mu_B$ (Welchův t-test) a
+$H_0\!: F_A = F_B$ (Mann--Whitney). Levene rozhodl mezi Welchem a sdruženým
+testem, obě varianty dávají shodné závěry. P-hodnoty zde \emph{nejsou}
+opravené na mnohonásobné testování.
+
+\includegraphics[width=\linewidth]{3_pvalue_heatmap.png}
+
+\includegraphics[width=\linewidth]{3_difference_ci.png}
+
+\includegraphics[width=\linewidth]{3_boxplots.png}
+
+\raggedright
+Telefon a latence se mezi chronotypy neliší ($p\ge0{,}16$). Délka spánku
+a únava se liší ve \emph{všech} dvojicích ($p<0{,}001$) a oba přístupy
+se shodují.
+}
+
+\block{Vícevýběrové testy}{
+$H_0\!: \mu_1=\mu_2=\mu_3$ (ANOVA, Welchova ANOVA) a
+Kruskal--Wallis. Velikost účinku $\eta^2$ ukazuje podíl rozptylu
+vysvětlený skupinou.
+
+\centering\small
+\begin{tabular}{lrrrrr}
+\toprule
+proměnná & $F$ & $p_{\mathrm{ANOVA}}$ & $H$ & $p_{\mathrm{KW}}$ & $\eta^2$ \\
+\midrule
+telefon & 1,14 & 0,32 & 0,96 & 0,62 & 0,0003 \\
+latence & 1,17 & 0,31 & 0,53 & 0,77 & 0,0003 \\
+spánek  & 2551 & $<0{,}001$ & 3244 & $<0{,}001$ & 0,38 \\
+únava   & 845  & $<0{,}001$ & 1619 & $<0{,}001$ & 0,17 \\
+\bottomrule
+\end{tabular}
+\normalsize
+
+\vspace{0.5em}
+\raggedright
+Post-hoc (Tukey HSD, Mann--Whitney s Holmovou korekcí) dává pro všech
+12 dvojic \emph{stejné rozhodnutí} jako nekorigované testy z předchozího
+bloku. Při $n=8\,500$ jsou rozdíly tak velké, že korekce nic nezmění.
+
+\centering
+\includegraphics[width=\linewidth]{4_violin_plots.png}
+
+\includegraphics[width=\linewidth]{4_simultaneous_ci.png}
+}
+
+\block{Diagnostika předpokladů}{
+Rozptyly se podle Leveneova a Bartlettova testu liší u spánku a únavy
+($p<0{,}001$), rezidua nejsou normální (Shapiro na vzorku 5\,000).
+Welchova ANOVA a Kruskal--Wallis proto dávají spolehlivější závěry než
+klasická ANOVA, výsledky ale vycházejí stejně.
+
+\includegraphics[width=0.7\linewidth]{4_residual_diagnostics.png}
+}
+
+
+% ===================== SLOUPEC 3 =====================
+\column{0.33}
+
+\block{Vícerozměrný přístup}{
+Vektor $(\text{telefon},\text{latence},\text{spánek},\text{únava})^\top$.
+Jednovýběrový $T^2$ ($H_0\!: \boldsymbol\mu=\boldsymbol\mu_0$) zamítá
+pro všechny skupiny ($T^2 = 259$ / $4\,411$ / $7\,246$), dvouvýběrový $T^2$
+zamítá pro všechny dvojice i po Holmově korekci
+($T^2 = 1\,999$ / $5\,217$ / $10\,820$). \textbf{MANOVA}: Wilksovo
+$\Lambda = 0{,}429$, Pillaiova stopa $0{,}578$ ($F(8;16\,990)=863$, $p<0{,}001$).
+
+Boxův $M$ test zamítá shodu kovariančních matic ($\chi^2(20)=784$,
+$p<0{,}001$), proto bereme MANOVA a $T^2$ jako orientační; Pillaiova stopa
+je vůči porušení nejodolnější.
+
+\includegraphics[width=0.9\linewidth]{5_mean_profiles.png}
+
+\includegraphics[width=0.5\linewidth]{5_confidence_ellipses.png}
+
+\includegraphics[width=\linewidth]{5_t2_difference_ci.png}
+
+\includegraphics[width=0.9\linewidth]{5_covariance_comparison.png}
+}
+
+\block{Závěr}{
+\begin{itemize}
+\item Chronotypy se liší \textbf{délkou spánku} (Night Owl $\approx 5{,}0$ h,
+      Morning Lark $\approx 7{,}4$ h) a \textbf{únavou}, ne telefonem před
+      spaním ani latencí usínání.
+\item Parametrické a neparametrické přístupy se shodují ve všech
+      dvojicích; rozdílné jsou jen jednovýběrové testy u zešikmených
+      proměnných (průměr vs. medián).
+\item Při $n=8\,500$ je test citlivý i na malé rozdíly, proto uvádíme
+      $\eta^2$: spánek $0{,}38$, únava $0{,}17$, ostatní $<0{,}001$.
+\item Normalita ani shoda kovariančních matic neplatí; závěry jsou
+      robustní díky velkému $n$ a velikosti rozdílů.
+\item Vícerozměrný pohled potvrzuje závěry po proměnných a ukazuje, že
+      skupiny se liší hlavně v kombinaci spánku a únavy.
+\end{itemize}
+}
+
+\block{Technologie a použití AI}{
+Python 3.13, NumPy, pandas, SciPy, statsmodels, Matplotlib. \texttt{main.py} provede všechny testy a uloží tabulky a grafy do \texttt{output/}; $T^2$ a Boxův $M$ test jsou implementovány ručně.
+
+\textbf{Použití AI:} TODO: stručně, k čemu a v jaké fázi (např. skeleton kódu, konzultace teorie, ladění).
+}
+
+
+\end{columns}
+
+\end{document}

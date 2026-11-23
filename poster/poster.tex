@@ -1,6 +1,8 @@
-\documentclass[28pt, a0paper, margin=3mm,
-               innermargin=8mm, blockverticalspace=20mm,
-               colspace=15mm, subcolspace=8mm]{tikzposter}
+\documentclass[28pt, a0paper, margin=0mm,
+               innermargin=4mm, blockverticalspace=0mm,
+               colspace=0mm, subcolspace=4mm,
+               titletotopverticalspace=4mm,
+               titletoblockverticalspace=0mm]{tikzposter}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -12,19 +14,19 @@
 \graphicspath{{../output/}}
 
 % ------------------------------------------------------------------
-% Barevné schéma a styl bloků (ploché obdélníky, tmavě modrá hlavička)
+% Barevné schéma a styl bloků (ploché obdélníky, žlutá hlavička a pozadí)
 % ------------------------------------------------------------------
 \definecolorstyle{MSMStyle}{
-    \definecolor{colorOne}{RGB}{17,54,97}   % tmavě modrá - title/block hlavičky
-    \definecolor{colorTwo}{RGB}{17,54,97}
+    \definecolor{colorOne}{HTML}{E0B100}   % žlutá - title/block hlavičky i pozadí
+    \definecolor{colorTwo}{HTML}{E0B100}
     \definecolor{colorThree}{RGB}{245,247,250}
 }{
-    \colorlet{backgroundcolor}{white}
+    \colorlet{backgroundcolor}{colorOne}
     \colorlet{framecolor}{colorOne}
-    \colorlet{titlefgcolor}{white}
-    \colorlet{titlebgcolor}{colorOne}
+    \colorlet{titlefgcolor}{black}
+    \colorlet{titlebgcolor}{white}
     \colorlet{blocktitlebgcolor}{colorOne}
-    \colorlet{blocktitlefgcolor}{white}
+    \colorlet{blocktitlefgcolor}{black}
     \colorlet{blockbodybgcolor}{white}
     \colorlet{blockbodyfgcolor}{black}
     \colorlet{notefgcolor}{black}
@@ -32,10 +34,12 @@
     \colorlet{notebgcolor}{colorThree}
 }
 
+\usetheme{Default}          % téma musí být PŘED vlastními styly, jinak je přepíše
 \usecolorstyle{MSMStyle}
-\usetheme{Default}
-\useblockstyle[roundedcorners=0pt, titlewidthscale=1, bodywidthscale=1]{Basic}
-\usetitlestyle[roundedcorners=0pt]{Filled}
+\useblockstyle[roundedcorners=0pt, titlewidthscale=1, bodywidthscale=1,
+               titleinnersep=4mm, bodyinnersep=5mm]{Basic}
+\usetitlestyle[roundedcorners=0pt, innersep=6mm,
+               titletotopverticalspace=0mm, titletoblockverticalspace=0mm]{Filled}
 
 \tikzposterlatexaffectionproofoff
 
@@ -43,7 +47,7 @@
 
 \title{\parbox{0.95\linewidth}{\centering Testy o poloze: liší se chronotypy délkou spánku a únavou?\\
 \large Jednorozměrné a vícerozměrné srovnání skupin Morning Lark, Intermediate a Night Owl}}
-\author{Vít Novotný \& TODO}
+\author{Vít Novotný \& Adam Kříž}
 \institute{ZČU FAV -- KMA/MSM 2026/2027}
 
 \begin{document}
@@ -52,7 +56,7 @@
 \begin{columns}
 
 % ===================== SLOUPEC 1 =====================
-\column{0.33}
+\column{0.5}
 
 \block{Cíl a data}{
 \textbf{Otázka:} liší se tři chronotypy (\emph{Morning Lark}, \emph{Intermediate},
@@ -62,13 +66,15 @@ $\alpha = 0{,}05$ ve všech testech.
 \textbf{Data:} Kaggle, \emph{Sleep Debt \& Screen Time} (syntetická data),
 $n = 8\,500$ pozorování ve skupinách po $3\,880$ / $2\,165$ / $2\,455$.
 
+\begin{minipage}[c]{0.47\linewidth}
 \begin{itemize}
 \item \var{bedtime_phone_minutes} -- minuty s telefonem před spaním
 \item \var{sleep_latency_min} -- doba usínání (min)
 \item \var{total_sleep_hours} -- délka spánku (h)
 \item \var{next_day_fatigue_score} -- únava další den (0--10, strop 10)
 \end{itemize}
-
+\end{minipage}\hfill
+\begin{minipage}[c]{0.51\linewidth}
 \centering\small
 \begin{tabular}{lrrrr}
 \toprule
@@ -80,15 +86,15 @@ Night Owl    & 58,3 (35,9) & 40,2 (16,7) & 5,01 (1,05) & 5,40 (2,54) \\
 \bottomrule
 \end{tabular}
 \normalsize
-
-\vspace{0.5em}
-\includegraphics[width=0.45\linewidth]{1_scatter_matrix.png}
+\end{minipage}
 }
 
 \block{Rozdělení dat}{
-Telefon a latence jsou zešikmené, únava má strop 10; normalita neplatí.
+Telefon a latence jsou zešikmené doprava, únava má strop 10 a spánek
+dolní hranici 3,2~h; normalita neplatí (Shapiro--Wilk $p<10^{-17}$ ve všech skupinách).
 
-\includegraphics[width=0.92\linewidth]{2_histograms.png}
+\centering
+\includegraphics[width=\linewidth]{2_histograms.png}
 }
 
 \block{Jednovýběrové testy}{
@@ -98,6 +104,8 @@ $H_0\!: m = m_0$ vs. $H_1\!: m \ne m_0$ (Wilcoxonův test).
 Referencí jsou \textbf{průměr $\mu_0$ a medián $m_0$ všech dat}, test tedy
 odpovídá na otázku, zda se skupina liší od celé populace.
 
+\vspace{0.5em}
+\begin{minipage}[c]{0.45\linewidth}
 \centering\small
 \begin{tabular}{llrr}
 \toprule
@@ -116,23 +124,19 @@ spánek  & všechny      & $<0{,}001$ & $<0{,}001$ \\
 \bottomrule
 \end{tabular}
 \normalsize
-
-\vspace{0.5em}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.52\linewidth}
 \raggedright
 Testy se rozcházejí u telefonních minut a latence: t-test průměr nezamítá,
 Wilcoxon zamítá, protože průměr (tažený dlouhým pravým chvostem) padá na
 $\mu_0$, ale medián ne. Opačně u únavy v~Intermediate: průměr se od $\mu_0$ liší,
-medián ne. Shapiro--Wilk zamítá normalitu všude ($p<10^{-17}$).
+medián ne.
+\end{minipage}
 
+\vspace{0.5em}
 \centering
 \includegraphics[width=\linewidth]{2_means_vs_reference.png}
-
-\includegraphics[width=0.38\linewidth]{2_qq_plots.png}
 }
-
-
-% ===================== SLOUPEC 2 =====================
-\column{0.33}
 
 \block{Dvouvýběrové testy}{
 Pro každou dvojici skupin: $H_0\!: \mu_A = \mu_B$ (Welchův t-test) a
@@ -140,23 +144,22 @@ $H_0\!: F_A = F_B$ (Mann--Whitney). Levene rozhodl mezi Welchem a sdruženým
 testem, obě varianty dávají shodné závěry. P-hodnoty zde \emph{nejsou}
 opravené na mnohonásobné testování.
 
-\includegraphics[width=\linewidth]{3_pvalue_heatmap.png}
-
-\includegraphics[width=\linewidth]{3_difference_ci.png}
-
-\includegraphics[width=\linewidth]{3_boxplots.png}
-
-\raggedright
 Telefon a latence se mezi chronotypy neliší ($p\ge0{,}16$). Délka spánku
 a únava se liší ve \emph{všech} dvojicích ($p<0{,}001$) a oba přístupy
 se shodují.
 }
+
+
+% ===================== SLOUPEC 2 =====================
+\column{0.5}
 
 \block{Vícevýběrové testy}{
 $H_0\!: \mu_1=\mu_2=\mu_3$ (ANOVA, Welchova ANOVA) a
 Kruskal--Wallis. Velikost účinku $\eta^2$ ukazuje podíl rozptylu
 vysvětlený skupinou.
 
+\vspace{0.5em}
+\begin{minipage}[c]{0.5\linewidth}
 \centering\small
 \begin{tabular}{lrrrrr}
 \toprule
@@ -169,17 +172,17 @@ spánek  & 2551 & $<0{,}001$ & 3244 & $<0{,}001$ & 0,38 \\
 \bottomrule
 \end{tabular}
 \normalsize
-
-\vspace{0.5em}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.47\linewidth}
 \raggedright
 Post-hoc (Tukey HSD, Mann--Whitney s Holmovou korekcí) dává pro všech
 12 dvojic \emph{stejné rozhodnutí} jako nekorigované testy z předchozího
 bloku. Při $n=8\,500$ jsou rozdíly tak velké, že korekce nic nezmění.
+\end{minipage}
 
+\vspace{0.5em}
 \centering
-\includegraphics[width=\linewidth]{4_violin_plots.png}
-
-\includegraphics[width=\linewidth]{4_simultaneous_ci.png}
+\includegraphics[width=\linewidth]{3_boxplots.png}
 }
 
 \block{Diagnostika předpokladů}{
@@ -187,13 +190,7 @@ Rozptyly se podle Leveneova a Bartlettova testu liší u spánku a únavy
 ($p<0{,}001$), rezidua nejsou normální (Shapiro na vzorku 5\,000).
 Welchova ANOVA a Kruskal--Wallis proto dávají spolehlivější závěry než
 klasická ANOVA, výsledky ale vycházejí stejně.
-
-\includegraphics[width=0.7\linewidth]{4_residual_diagnostics.png}
 }
-
-
-% ===================== SLOUPEC 3 =====================
-\column{0.33}
 
 \block{Vícerozměrný přístup}{
 Vektor $(\text{telefon},\text{latence},\text{spánek},\text{únava})^\top$.
@@ -207,13 +204,23 @@ Boxův $M$ test zamítá shodu kovariančních matic ($\chi^2(20)=784$,
 $p<0{,}001$), proto bereme MANOVA a $T^2$ jako orientační; Pillaiova stopa
 je vůči porušení nejodolnější.
 
-\includegraphics[width=0.9\linewidth]{5_mean_profiles.png}
+\vspace{0.5em}
+\centering
+\includegraphics[width=0.8\linewidth]{5_mean_profiles.png}
 
-\includegraphics[width=0.5\linewidth]{5_confidence_ellipses.png}
+\includegraphics[width=0.8\linewidth]{5_t2_difference_ci.png}
 
-\includegraphics[width=\linewidth]{5_t2_difference_ci.png}
-
-\includegraphics[width=0.9\linewidth]{5_covariance_comparison.png}
+\begin{minipage}[c]{0.4\linewidth}
+\centering
+\includegraphics[width=\linewidth]{5_centroid_distances.png}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.57\linewidth}
+\raggedright
+Mahalanobisova vzdálenost průměrových vektorů: nejdál od sebe jsou
+Morning Lark a Night Owl ($D^2 = 9{,}41$), Intermediate leží mezi nimi.
+Simultánní $T^2$ intervaly (modře) jsou širší než jednotlivé t-intervaly,
+závěry se ale nemění.
+\end{minipage}
 }
 
 \block{Závěr}{
@@ -236,9 +243,8 @@ je vůči porušení nejodolnější.
 \block{Technologie a použití AI}{
 Python 3.13, NumPy, pandas, SciPy, statsmodels, Matplotlib. \texttt{main.py} provede všechny testy a uloží tabulky a grafy do \texttt{output/}; $T^2$ a Boxův $M$ test jsou implementovány ručně.
 
-\textbf{Použití AI:} TODO: stručně, k čemu a v jaké fázi (např. skeleton kódu, konzultace teorie, ladění).
+\textbf{Použití AI:} V rámci této práce byla využita umělá inteligence (Claude a Gemini) k odstraňování chyb a optimalizaci kódu v jazyce Python.
 }
-
 
 \end{columns}
 

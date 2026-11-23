@@ -77,6 +77,15 @@ def save_figure(fig: plt.Figure, name: str) -> None:
     plt.close(fig)
 
 
+def text_color(image, value: float) -> str:
+    """
+    Black or white text, whichever is more readable on the heat-map cell coloured by `image` for `value`
+    (decided by the relative luminance of the cell colour).
+    """
+    r, g, b, _ = image.cmap(image.norm(value))
+    return "black" if 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.45 else "white"
+
+
 def save_table(table: pd.DataFrame, name: str) -> None:
     """
     Prints the result table and saves it to OUTPUT_DIR as CSV.
@@ -284,8 +293,9 @@ def plot_one_sample(df: pd.DataFrame, variables: list[str], group_col: str,
     groups = sorted(df[group_col].unique())
     ref = references.set_index("variable")
     x = np.arange(len(groups))
-    fig, axes = plt.subplots(1, len(variables), figsize=(4 * len(variables), 4), squeeze=False)
-    for ax, var in zip(axes[0], variables):
+    rows = -(-len(variables) // 2)   # 2 panels per row (fits the poster better than 1 x 4)
+    fig, axes = plt.subplots(rows, 2, figsize=(9, 4 * rows), squeeze=False)
+    for ax, var in zip(axes.flat, variables):
         res = results[results["variable"] == var].set_index("group").loc[groups]
         ax.errorbar(x, res["mean"], yerr=[res["mean"] - res["CI_lower"], res["CI_upper"] - res["mean"]],
                     fmt="o", capsize=4, label="mean (95% CI)")
@@ -297,6 +307,9 @@ def plot_one_sample(df: pd.DataFrame, variables: list[str], group_col: str,
             ax.text(xi, r["CI_upper"], mark, ha="center", va="bottom", fontweight="bold")
         ax.set_xticks(x, groups, rotation=15)
         ax.set_title(var)
+        ax.margins(y=0.12)   # headroom for the t / W marks above the intervals
+    for ax in axes.flat[len(variables):]:
+        ax.set_visible(False)
     axes[0, 0].legend(fontsize=8)
     return fig
 
@@ -393,7 +406,7 @@ def plot_pvalue_heatmap(results: pd.DataFrame, variables: list[str], groups: lis
         for i, j in zip(*np.where(~np.isnan(matrix))):
             p = matrix[i, j]
             ax.text(j, i, "<0.001" if p < 0.001 else f"{p:.3f}", ha="center", va="center", fontsize=9,
-                    color="white" if p < 0.5 else "black", fontweight="bold" if p < ALPHA else "normal")
+                    color=text_color(image, p), fontweight="bold" if p < ALPHA else "normal")
         ax.set_xticks(range(len(groups)), groups, rotation=30, ha="right")
         ax.set_yticks(range(len(groups)), groups)
         ax.set_title(f"{var}\nupper: Welch t, lower: Mann-Whitney", fontsize=9)
@@ -749,24 +762,20 @@ def plot_multivariate_normality(df: pd.DataFrame, variables: list[str], group_co
 
 def plot_mean_profiles(df: pd.DataFrame, variables: list[str], group_col: str) -> plt.Figure:
     """
-    Profiles of the mean vectors: group means of the standardised variables (z-scores of all data),
-    as lines (left) and as a heat map (right). Shows at a glance how the groups differ in location.
+    Profiles of the mean vectors: heat map of the group means of the standardised variables
+    (z-scores of all data). Shows at a glance how the groups differ in location.
     """
     means = ((df[variables] - df[variables].mean()) / df[variables].std(ddof=1)).groupby(df[group_col]).mean()
     limit = np.abs(means.to_numpy()).max()
-    fig, (ax_lines, ax_heat) = plt.subplots(1, 2, figsize=(12, 4.5))
-    for group in means.index:
-        ax_lines.plot(variables, means.loc[group], marker="o", label=group)
-    ax_lines.axhline(0, color="k", linewidth=0.8)
-    ax_lines.set_ylabel("standardised group mean (z-score)")
-    ax_lines.tick_params(axis="x", rotation=20)
-    ax_lines.legend()
-    image = ax_heat.imshow(means.to_numpy(), cmap="coolwarm", vmin=-limit, vmax=limit)
+    fig, ax = plt.subplots(figsize=(8, 4))
+    image = ax.imshow(means.to_numpy(), cmap="coolwarm", vmin=-limit, vmax=limit, aspect="auto")
     for i, j in np.ndindex(means.shape):
-        ax_heat.text(j, i, f"{means.iloc[i, j]:.2f}", ha="center", va="center")
-    ax_heat.set_xticks(range(len(variables)), variables, rotation=20, ha="right")
-    ax_heat.set_yticks(range(len(means)), means.index)
-    fig.colorbar(image, ax=ax_heat, fraction=0.046)
+        ax.text(j, i, f"{means.iloc[i, j]:.2f}", ha="center", va="center",
+                color=text_color(image, means.iloc[i, j]))
+    ax.set_xticks(range(len(variables)), variables, rotation=20, ha="right")
+    ax.set_yticks(range(len(means)), means.index)
+    ax.set_title("standardised group means (z-score)")
+    fig.colorbar(image, ax=ax, fraction=0.046)
     return fig
 
 
@@ -782,8 +791,9 @@ def plot_t2_difference_ci(df: pd.DataFrame, variables: list[str], group_col: str
     data = {group: df.loc[df[group_col] == group, variables].to_numpy() for group in groups}
     pairs = group_pairs(groups)
     p = len(variables)
-    fig, axes = plt.subplots(1, p, figsize=(4 * p, 3.5), squeeze=False)
-    for ax, (j, var) in zip(axes[0], enumerate(variables)):
+    rows = -(-p // 2)   # 2 panels per row (fits the poster better than 1 x 4)
+    fig, axes = plt.subplots(rows, 2, figsize=(10, 3.5 * rows), squeeze=False)
+    for ax, (j, var) in zip(axes.flat, enumerate(variables)):
         for y, (a, b) in enumerate(pairs):
             (n1, _), n2 = data[a].shape, data[b].shape[0]
             pooled = ((n1 - 1) * np.cov(data[a], rowvar=False) + (n2 - 1) * np.cov(data[b], rowvar=False)) / (n1 + n2 - 2)
@@ -800,6 +810,8 @@ def plot_t2_difference_ci(df: pd.DataFrame, variables: list[str], group_col: str
         ax.set_ylim(-0.5, len(pairs) + 0.3)   # headroom for the legend
         ax.set_title(var)
         ax.set_xlabel("difference of means")
+    for ax in axes.flat[p:]:
+        ax.set_visible(False)
     axes[0, 0].legend(fontsize=7, loc="upper left", ncol=2)
     return fig
 
@@ -823,7 +835,7 @@ def plot_centroid_distances(df: pd.DataFrame, variables: list[str], group_col: s
     fig, ax = plt.subplots(figsize=(6, 5))
     image = ax.imshow(d2, cmap="viridis")
     for i, j in np.ndindex(d2.shape):
-        ax.text(j, i, labels[i, j], ha="center", va="center", color="white", fontsize=9)
+        ax.text(j, i, labels[i, j], ha="center", va="center", color=text_color(image, d2[i, j]), fontsize=9)
     ax.set_xticks(range(len(groups)), groups, rotation=20, ha="right")
     ax.set_yticks(range(len(groups)), groups)
     ax.set_title("Mahalanobis distance between group mean vectors")
